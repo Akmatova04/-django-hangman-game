@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сөз Тапмай Оюну</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #eef1f5;
+            margin: 0;
+            padding-top: 20px;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 25px 35px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        /* Hangman фигурасы жана дарга үчүн */
+        .hangman-container {
+            width: 200px; 
+            height: 250px; 
+            margin: 10px auto 15px auto; /* Үстүнкү жана астыңкы боштуктарды азайттым */
+            position: relative;
+            /* border: 1px solid #ccc; /* Кааласаңыз, чек арасын көрүү үчүн */
+        }
+
+        .gallows-base { /* Дарганын түбү (милдеттүү эмес) */
+            width: 100px;
+            height: 10px;
+            background-color: #8B4513; /* Күрөң түс (жыгач) */
+            position: absolute;
+            bottom: 0;
+            left: 15px; /* Мамыга салыштырмалуу борборлоштуруу үчүн */
+        }
+        .gallows-pole { /* Дарганын тик мамысы */
+            width: 10px;
+            height: 230px;
+            background-color: #8B4513;
+            position: absolute;
+            bottom: 0;
+            left: 60px; 
+        }
+        .gallows-beam { /* Дарганын үстүнкү горизонталдык бөлүгү */
+            width: 100px;
+            height: 10px;
+            background-color: #8B4513;
+            position: absolute;
+            top: 20px; 
+            left: 60px;
+        }
+        .gallows-rope { /* Аркан */
+            width: 4px;
+            height: 30px;
+            background-color: #A0522D; 
+            position: absolute;
+            top: 30px; 
+            left: 150px; /* Горизонталдык бөлүктүн оң четине жакын */
+        }
+
+        .hangman-figure { 
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .hangman-figure .part {
+            background-color: #2c3e50; 
+            position: absolute;
+            display: none; 
+        }
+        .hangman-figure .head { 
+            width: 30px; height: 30px; border-radius: 50%; 
+            top: 58px; /* Аркандын астына туураладым */
+            left: 137px; 
+        }
+        .hangman-figure .body { 
+            width: 6px; height: 60px; 
+            top: 88px; 
+            left: 149px; 
+        }
+        .hangman-figure .arm-left { 
+            width: 40px; height: 6px;  /* Горизонталдуу кылып өзгөрттүм */
+            top: 100px; left: 110px; /* Жайгашуусун оңдодум */
+            transform-origin: center right; 
+            transform: rotate(30deg); 
+        }
+        .hangman-figure .arm-right { 
+            width: 40px; height: 6px; 
+            top: 100px; left: 155px; /* Жайгашуусун оңдодум */
+            transform-origin: center left; 
+            transform: rotate(-30deg); 
+        }
+        .hangman-figure .leg-left { 
+            width: 40px; height: 6px; 
+            top: 145px; left: 110px; /* Жайгашуусун оңдодум */
+            transform-origin: center right;
+            transform: rotate(60deg); 
+        }
+        .hangman-figure .leg-right { 
+            width: 40px; height: 6px; 
+            top: 145px; left: 155px; /* Жайгашуусун оңдодум */
+            transform-origin: center left;
+            transform: rotate(-60deg); 
+        }
+
+
+        .word-display {
+            font-size: 2.2em; /* Бир аз кичирейттим */
+            letter-spacing: 0.15em;
+            margin: 20px 0;
+            color: #3498db;
+            font-weight: bold;
+            min-height: 40px; 
+        }
+        .message {
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 1em; /* Бир аз кичирейттим */
+        }
+        .message.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+        .input-area form {
+            margin-bottom: 15px;
+        }
+        .input-area input[type="text"] {
+            padding: 8px 10px; /* Бир аз кичирейттим */
+            font-size: 0.9em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 40px; 
+            text-align: center;
+            text-transform: lowercase; 
+        }
+        .input-area button[type="submit"] {
+            padding: 8px 15px; /* Бир аз кичирейттим */
+            font-size: 0.9em;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        .input-area button[type="submit"]:hover { background-color: #27ae60; }
+
+        .alphabet-buttons {
+             margin-bottom: 15px;
+        }
+        .alphabet-buttons button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            width: 30px; /* Бир аз кичирейттим */
+            height: 30px;
+            margin: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+        .alphabet-buttons button:hover { background-color: #2980b9; }
+        .alphabet-buttons button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .game-info p { margin: 6px 0; font-size: 1em; } /* Бир аз кичирейттим */
+        .guesses-left { color: #e74c3c; font-weight: bold; }
+        .used-letters span {
+            display: inline-block;
+            background-color: #ecf0f1;
+            color: #7f8c8d;
+            padding: 4px 7px;
+            margin: 2px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            text-transform: uppercase;
+        }
+        .new-game-button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px; /* Бир аз кичирейттим */
+            background-color: #e67e22;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        .new-game-button:hover { background-color: #d35400; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Сөз Тапмай</h1>
+
+        <div class="hangman-container">
+            <div class="gallows-base"></div>
+            <div class="gallows-pole"></div>
+            <div class="gallows-beam"></div>
+            <div class="gallows-rope"></div>
+            <div class="hangman-figure">
+                <!-- Адамдын бөлүктөрү JavaScript менен көрсөтүлөт -->
+                <div class="part head"></div>
+                <div class="part body"></div>
+                <div class="part arm-left"></div>
+                <div class="part arm-right"></div>
+                <div class="part leg-left"></div>
+                <div class="part leg-right"></div>
+            </div>
+        </div>
+
+        <div class="word-display">{{ displayed_word }}</div>
+
+        {% if message %}
+            <div class="message 
+                {% if game_won %}success
+                {% elif 'Ката!' in message or 'утулуп калдыңыз' in message or 'аракет калды' in message and not game_won %}error
+                {% else %}info{% endif %}">
+                {{ message }}
+            </div>
+        {% endif %}
+
+        {% if not game_over %}
+            <div class="input-area">
+                <form method="post" action="{% url 'hangman_play' %}" id="letterInputForm">
+                    {% csrf_token %}
+                    <label for="letter">Тамга киргизиңиз: </label>
+                    <input type="text" id="letter" name="letter" maxlength="1" pattern="[a-zA-Zа-яА-ЯёЁңҢөӨүҮўЎ]{1}" autofocus>
+                    <button type="submit">Текшерүү</button>
+                </form>
+            </div>
+            
+            <div class="alphabet-buttons">
+                <form method="post" action="{% url 'hangman_play' %}" id="alphabetForm">
+                    {% csrf_token %}
+                    {% for char_code in alphabet %}
+                        <button type="submit" name="letter" value="{{ char_code }}"
+                                {% if char_code in used_letters_list %}disabled{% endif %}>
+                            {{ char_code|upper }}
+                        </button>
+                    {% endfor %}
+                </form>
+            </div>
+
+        {% else %}
+            <a href="{% url 'hangman_new_game' %}" class="new-game-button">Жаңы оюн</a>
+        {% endif %}
+
+        <div class="game-info">
+            <p>Калган аракеттер: <span class="guesses-left">{{ guesses_left }}</span></p>
+            {% if used_letters_list %}
+            <p>Колдонулган тамгалар: 
+                {% for letter_item in used_letters_list %}
+                    <span>{{ letter_item|upper }}</span>
+                {% endfor %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        const partsOrder = ['head', 'body', 'arm-left', 'arm-right', 'leg-left', 'leg-right'];
+        const incorrectGuessesMade = {{ max_guesses }} - {{ guesses_left }};
+
+        // Алгач бардык бөлүктөрдү жашыруу
+        partsOrder.forEach(partName => {
+            const partElement = document.querySelector('.hangman-figure .' + partName);
+            if (partElement) {
+                partElement.style.display = 'none';
+            }
+        });
+        
+        // Каталардын санына жараша бөлүктөрдү көрсөтүү
+        for (let i = 0; i < incorrectGuessesMade && i < partsOrder.length; i++) {
+            const partElement = document.querySelector('.hangman-figure .' + partsOrder[i]);
+            if (partElement) {
+                partElement.style.display = 'block';
+            }
+        }
+
+        // Оюн бүткөндө жана утулганда, эгер бардык бөлүктөр көрсөтүлө элек болсо, көрсөтүү
+        // (Бул бөлүк views.py'дагы логикага жараша да өзгөрүшү мүмкүн,
+        // эгер утулуп калса, guesses_left = 0 болот)
+        if ({{ game_over|yesno:"true,false" }} && !{{ game_won|yesno:"true,false" }} && {{ guesses_left }} <= 0) {
+             for (let i = 0; i < partsOrder.length; i++) { // Бардык 6 бөлүктү көрсөтүү
+                const partElement = document.querySelector('.hangman-figure .' + partsOrder[i]);
+                if (partElement) {
+                     partElement.style.display = 'block';
+                }
+            }
+        }
+
+        // Фокусту текст талаасына коюу (эгер оюн бүтө элек болсо)
+        const letterInput = document.getElementById('letter');
+        if (letterInput && !{{ game_over|yesno:"true,false" }}) {
+            letterInput.focus();
+            // Киргизилгенден кийин талааны тазалоо (милдеттүү эмес, бирок ыңгайлуу)
+             letterInput.value = ''; 
+        }
+
+        // Энтер баскычы менен алфавит формасын жөнөтпөө (эгер текст талаасы артыкчылыктуу болсо)
+        // Бирок бизде эки форма тең POST, ошондуктан бул азырынча маанилүү эмес.
+        // Эгерде баскычтарды өзүнчө JavaScript менен иштетсек, анда бул керек болмок.
+
+    </script>
+
+</body>
+</html>
